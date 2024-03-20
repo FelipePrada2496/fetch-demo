@@ -4,17 +4,10 @@ import axiosInstance from './api';
 import Summary from './component/Sumary';
 import Carousel from './component/Carousel';
 
-/**
- * 1. Fix Issues on Carrousel
- * 2. every card on Carrousel must have image
- * 3. the image must come from the api
- * you can use UseEffect or UseState to solve the issues on the project
- */
-
 function App() {
   const [pokeList, setPokeList] = useState([]);
   const [selectedPoke, setSelectedPoke] = useState({});
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setPage] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
 
@@ -59,15 +52,23 @@ function App() {
   }, [pokeList]);
 
 
-  const onNextPage = () => {
-    setCurrentPage(currentPage + 1);
-  };
-
-
-  const onPrevPage = () => {
-    setCurrentPage(currentPage - 1);
-  };
-
+  const onNextPage = async () => {
+    const nextPage = currentPage + 1; // Obtener la siguiente página
+    setPage(nextPage); // Actualizar currentPage
+    const data = await axiosInstance.get(`/pokemon?limit=6&offset=${nextPage * 6}`); // Usar nextPage
+    setPokeList(data.data.results);
+  }
+  
+  const onPrevPage = async () => {
+    if (currentPage > 0) { // Asegurarse de que no se vaya a una página negativa
+      const prevPage = currentPage - 1; // Obtener la página anterior
+      setPage(prevPage); // Actualizar currentPage
+      const data = await axiosInstance.get(`/pokemon?limit=6&offset=${prevPage * 6}`); // Usar prevPage
+      setPokeList(data.data.results);
+    }
+  }
+  
+  
 
   return (
     <div className={`flex flex-col w-full h-screen items-center ${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-8`}>
@@ -75,7 +76,7 @@ function App() {
         <img width="35px" height="35px" src={isDarkMode ? '/sun.svg' : '/moon.svg'} alt="Theme toggle" />
       </button>
       <h1 className={`mb-5 text-3xl font-bold uppercase ${isDarkMode ? 'text-white' : 'text-black'}`}> PokeDex</h1>
-      <Carousel onLeftClick={onPrevPage} onRightClick={onNextPage} elementList={getPokemonList()} />
+      <Carousel onLeftClick={onPrevPage} onRightClick={onNextPage} elementList={getPokemonList()}/>
       <div>
         {Object.keys(selectedPoke).length > 0 && <Summary data={selectedPoke} />}
       </div>
